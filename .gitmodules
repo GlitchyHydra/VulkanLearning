@@ -1,0 +1,9 @@
+[submodule "Vulkan3dRenderer/vendor/glm"]
+	path = Vulkan3dRenderer/vendor/glm
+	url = https://github.com/GlitchyHydra/glm.git
+	branch = master
+
+[submodule "Vulkan3dRenderer/vendor/glfw"]
+	path = Vulkan3dRenderer/vendor/glfw
+	url = https://github.com/GlitchyHydra/glfw.git
+	branch = master
