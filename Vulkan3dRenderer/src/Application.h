@@ -86,6 +86,11 @@ class Application
 
 	VkRenderPass renderPass;
 	VkPipelineLayout pipelineLayout;
+
+	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorPool descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
+
 	VkPipeline graphicsPipeline;
 	VkCommandPool commandPool;
 
@@ -131,6 +136,9 @@ class Application
 	VkBuffer indexBuffer;
 	VkDeviceMemory indexBufferMemory;
 
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+
 	void setupDebugMessenger();
 	void pickPhysicalDevice();
 	void createLogicalDevice();
@@ -152,8 +160,14 @@ class Application
 
 	void createIndexBuffer();
 
+	void createUniformBuffers();
+
+	void createDescriptorSetLayout();
+	void createDescriptorSets();
+
 	void createCommandBuffers();
 	void createSyncObjects();
+	void createDescriptorPool();
 
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
@@ -167,6 +181,7 @@ class Application
 
 	bool checkValidationLayerSupport();
 
+	void updateUniformBuffer(uint32_t currentImage);
 	void drawFrame();
 
 	void recreateSwapChain();
