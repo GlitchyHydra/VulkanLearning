@@ -14,6 +14,7 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "Vulkan3dRenderer/vendor/GLFW/include"
 IncludeDir["glm"] = "Vulkan3dRenderer/vendor/glm"
 IncludeDir["Vulkan"] = "%{sdkpath}/include"
+IncludeDir["stb_image"] = "Vulkan3dRenderer/vendor/stb_image"
 
 group "Dependecies"
     include "Vulkan3dRenderer/vendor/GLFW"
@@ -56,7 +57,8 @@ project "Vulkan3dRenderer"
         --"%{IncludeDir.GLFW}",
         "%{prj.name}/vendor/glfw_precomp/include",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.Vulkan}"
+        "%{IncludeDir.Vulkan}",
+        "%{IncludeDir.stb_image}"
     }
     
     links 

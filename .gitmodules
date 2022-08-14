@@ -7,3 +7,6 @@
 	path = Vulkan3dRenderer/vendor/glfw
 	url = https://github.com/GlitchyHydra/glfw.git
 	branch = master
+[submodule "Vulkan3dRenderer/vendor/stb_image"]
+	path = Vulkan3dRenderer/vendor/stb_image
+	url = https://github.com/nothings/stb.git
