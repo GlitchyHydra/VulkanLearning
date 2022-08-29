@@ -11,10 +11,11 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 sdkpath = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}
-IncludeDir["GLFW"] = "Vulkan3dRenderer/vendor/GLFW/include"
+IncludeDir["GLFW"] = "Vulkan3dRenderer/vendor/glfw/include"
 IncludeDir["glm"] = "Vulkan3dRenderer/vendor/glm"
 IncludeDir["Vulkan"] = "%{sdkpath}/include"
 IncludeDir["stb_image"] = "Vulkan3dRenderer/vendor/stb_image"
+IncludeDir["tinyobjloader"] = "Vulkan3dRenderer/vendor/tinyobjloader"
 
 group "Dependecies"
     include "Vulkan3dRenderer/vendor/GLFW"
@@ -54,17 +55,16 @@ project "Vulkan3dRenderer"
     includedirs
 	{
 		"%{prj.name}/src",
-        --"%{IncludeDir.GLFW}",
-        "%{prj.name}/vendor/glfw_precomp/include",
+        "%{IncludeDir.GLFW}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.Vulkan}",
-        "%{IncludeDir.stb_image}"
+        "%{IncludeDir.stb_image}",
+        "%{IncludeDir.tinyobjloader}"
     }
     
     links 
 	{ 
-        --"GLFW",
-        "glfw3_mt",
+        "GLFW",
         "vulkan-1",
         "VkLayer_utils"
     }

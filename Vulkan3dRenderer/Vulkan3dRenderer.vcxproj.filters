@@ -1,28 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="detail">
-      <UniqueIdentifier>{18D587F8-0477-B2CE-ED31-C622D972391F}</UniqueIdentifier>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{7CCE658F-689B-C09A-91B4-AE427DE0F528}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ext">
-      <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gtc">
-      <UniqueIdentifier>{6378880B-CF81-887C-58FD-9E7CC405947C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gtx">
-      <UniqueIdentifier>{7878880B-E481-887C-6DFD-9E7CD905947C}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
-    <ClInclude Include="src\Queue.h" />
-    <ClInclude Include="src\LogicalDevice.h" />
-    <ClInclude Include="src\ShaderLoader.h" />
+    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\GameObject.h" />
+    <ClInclude Include="src\Renderer\Buffer.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Device.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Model.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Pipeline.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Renderer.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\SimpleRendererSystem.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\SwapChain.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShortcutController.h" />
     <ClInclude Include="src\Window.h" />
+    <ClInclude Include="src\Utils.h" />
+    <ClInclude Include="src\Renderer\FrameInfo.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\Renderer\Buffer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Device.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Model.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Pipeline.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\Renderer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\SimpleRendererSystem.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer\SwapChain.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShortcutController.cpp" />
+    <ClCompile Include="src\Window.cpp" />
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
 </Project>

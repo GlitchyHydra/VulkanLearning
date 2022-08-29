@@ -10,3 +10,6 @@
 [submodule "Vulkan3dRenderer/vendor/stb_image"]
 	path = Vulkan3dRenderer/vendor/stb_image
 	url = https://github.com/nothings/stb.git
+[submodule "Vulkan3dRenderer/vendor/tinyobjloader"]
+	path = Vulkan3dRenderer/vendor/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
