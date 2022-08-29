@@ -13,3 +13,6 @@
 [submodule "Vulkan3dRenderer/vendor/tinyobjloader"]
 	path = Vulkan3dRenderer/vendor/tinyobjloader
 	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "Vulkan3dRenderer/vendor/spdlog"]
+	path = Vulkan3dRenderer/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git

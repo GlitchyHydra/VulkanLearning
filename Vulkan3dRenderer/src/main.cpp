@@ -6,8 +6,12 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "Log.h"
+
 int main()
 {
+	Vipera::Log::Init();
+
 	Vipera::Application app{};
 
 	try
