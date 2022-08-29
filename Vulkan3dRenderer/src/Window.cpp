@@ -1,12 +1,14 @@
 #include "Window.h"
 
+// std
+#include <stdexcept>
+
 namespace Vipera
 {
-
-	Window::Window(int width, int height, std::string name)
-		: width(width), height(height), name(name)
+	Window::Window(int w, int h, std::string name)
+		: width{ w }, height{ h }, windowName{ name }
 	{
-		
+		initWindow();
 	}
 
 	Window::~Window()
@@ -15,15 +17,31 @@ namespace Vipera
 		glfwTerminate();
 	}
 
-
 	void Window::initWindow()
 	{
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-		window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
+		window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+		glfwSetWindowUserPointer(window, this);
+		glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 	}
 
+	void Window::createWindowSurface(VkInstance instance, VkSurfaceKHR* surface)
+	{
+		if (glfwCreateWindowSurface(instance, window, nullptr, surface) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to craete window surface");
+		}
+	}
 
-}
+	void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height)
+	{
+		auto handle = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+		handle->framebufferResized = true;
+		handle->width = width;
+		handle->height = height;
+	}
+
+}  // namespace 
