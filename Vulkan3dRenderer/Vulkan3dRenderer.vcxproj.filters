@@ -9,10 +9,14 @@
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\GameObject.h" />
+    <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\Renderer\Buffer.h">
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\Device.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\FrameInfo.h">
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\Model.h">
@@ -31,14 +35,15 @@
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\ShortcutController.h" />
-    <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\Utils.h" />
-    <ClInclude Include="src\Renderer\FrameInfo.h" />
+    <ClInclude Include="src\Window.h" />
+    <ClInclude Include="src\Renderer\Descriptors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\Renderer\Buffer.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
@@ -63,5 +68,6 @@
     <ClCompile Include="src\ShortcutController.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Renderer\Descriptors.cpp" />
   </ItemGroup>
 </Project>

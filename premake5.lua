@@ -16,6 +16,7 @@ IncludeDir["glm"] = "Vulkan3dRenderer/vendor/glm"
 IncludeDir["Vulkan"] = "%{sdkpath}/include"
 IncludeDir["stb_image"] = "Vulkan3dRenderer/vendor/stb_image"
 IncludeDir["tinyobjloader"] = "Vulkan3dRenderer/vendor/tinyobjloader"
+IncludeDir["spdlog"] = "Vulkan3dRenderer/vendor/spdlog/include"
 
 group "Dependecies"
     include "Vulkan3dRenderer/vendor/GLFW"
@@ -59,7 +60,8 @@ project "Vulkan3dRenderer"
         "%{IncludeDir.glm}",
         "%{IncludeDir.Vulkan}",
         "%{IncludeDir.stb_image}",
-        "%{IncludeDir.tinyobjloader}"
+        "%{IncludeDir.tinyobjloader}",
+        "%{IncludeDir.spdlog}"
     }
     
     links 

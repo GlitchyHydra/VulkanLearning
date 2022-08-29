@@ -11,6 +11,7 @@
 namespace Vipera
 {
 	class GameObject;
+	class DescriptorPool;
 
 	class Application
 	{
@@ -33,7 +34,8 @@ namespace Vipera
 	  Window m_Window{WIDTH, HEIGHT, "Vulkan Tutorial"};
 	  Device m_Device{ m_Window };
 	  Renderer m_Renderer{m_Window, m_Device};
-	  
+
+	  std::unique_ptr<DescriptorPool> globalPool{};
 	  std::vector<GameObject> m_GameObjects;
 	};
 }  // namespace lve

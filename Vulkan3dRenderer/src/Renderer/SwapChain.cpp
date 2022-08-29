@@ -1,6 +1,6 @@
 #include "SwapChain.h"
 
-// std
+//std
 #include <array>
 #include <cstdlib>
 #include <cstring>
@@ -8,6 +8,8 @@
 #include <limits>
 #include <set>
 #include <stdexcept>
+
+#include "Log.h"
 
 namespace Vipera
 {
@@ -422,7 +424,7 @@ namespace Vipera
 		{
 			if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 			{
-				std::cout << "Present mode: Mailbox" << std::endl;
+				VIPERA_CORE_INFO("Present mode: Mailbox")
 				return availablePresentMode;
 			}
 		}
@@ -434,7 +436,7 @@ namespace Vipera
 		//   }
 		// }
 
-		std::cout << "Present mode: V-Sync" << std::endl;
+		VIPERA_CORE_INFO("Present mode: V-Sync")
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 

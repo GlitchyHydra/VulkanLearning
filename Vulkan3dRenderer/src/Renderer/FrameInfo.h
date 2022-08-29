@@ -11,5 +11,6 @@ namespace Vipera
 		float FrameTime;
 		VkCommandBuffer CommandBuffer;
 		Camera& Camera;
+		VkDescriptorSet globalDescriptorSet;
 	};
 }

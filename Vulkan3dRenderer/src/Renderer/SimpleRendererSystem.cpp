@@ -13,14 +13,14 @@ namespace Vipera
 {
 	struct SimplePushConstantData
 	{
-		glm::mat4 transform{ 1.f };
+		glm::mat4 modelMatrix{ 1.f };
 		glm::mat4 normalMatrix {1.f};
 	};
 
-	SimpleRendererSystem::SimpleRendererSystem(Device& device, VkRenderPass renderPass)
+	SimpleRendererSystem::SimpleRendererSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
 		:m_Device{device}
 	{
-		createPipelineLayout();
+		createPipelineLayout(globalSetLayout);
 		createPipeline(renderPass);
 	}
 
@@ -29,17 +29,19 @@ namespace Vipera
 		vkDestroyPipelineLayout(m_Device.device(), pipelineLayout, nullptr);
 	}
 	
-	void SimpleRendererSystem::createPipelineLayout()
+	void SimpleRendererSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
 	{
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(SimplePushConstantData);
 
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts {globalSetLayout};
+
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pSetLayouts = nullptr;
+		pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 		if (vkCreatePipelineLayout(m_Device.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) !=
@@ -69,15 +71,19 @@ namespace Vipera
 	{
 		m_Pipeline->bind(frameInfo.CommandBuffer);
 
-		auto projectionView = 
-			frameInfo.Camera.GetProjectionMatrix() * frameInfo.Camera.GetViewMatrix();
+		vkCmdBindDescriptorSets(frameInfo.CommandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			pipelineLayout,
+			0, 1,
+			&frameInfo.globalDescriptorSet,
+			0, nullptr);
 
 		for (auto& gameObj : gameObjects)
 		{
 			auto modelMatrix = gameObj.transform.mat4();
 			SimplePushConstantData push
 			{
-				  projectionView * modelMatrix,
+				  gameObj.transform.mat4(),
 				gameObj.transform.normalMatrix(),
 			};
 

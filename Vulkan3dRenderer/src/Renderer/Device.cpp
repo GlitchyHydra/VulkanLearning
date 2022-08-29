@@ -6,6 +6,8 @@
 #include <set>
 #include <unordered_set>
 
+#include "Log.h"
+
 namespace Vipera
 {
 
@@ -16,11 +18,18 @@ namespace Vipera
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData)
     {
-        if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+        if (messageSeverity < VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+            return VK_FALSE;
+
+        if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
         {
-            std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-            
+            VIPERA_CORE_WARN("validation layer: {}", pCallbackData->pMessage)
         }
+        else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+        {
+            VIPERA_CORE_ERROR("validation layer: {}", pCallbackData->pMessage)
+        }
+        
 
         return VK_FALSE;
     }

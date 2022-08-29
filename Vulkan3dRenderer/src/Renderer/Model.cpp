@@ -2,6 +2,7 @@
 
 #include "Buffer.h"
 #include "Utils.h"
+#include "Log.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
@@ -47,7 +48,7 @@ namespace Vipera
 		Builder builder{};
 		builder.loadModel(filepath);
 
-		std::cout << "vertex count: " << builder.vertices.size();
+		VIPERA_CORE_INFO("vertex count: {}", builder.vertices.size())
 
 		return std::make_unique<Model>(device, builder);
 	}

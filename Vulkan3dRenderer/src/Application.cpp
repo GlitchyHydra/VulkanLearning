@@ -13,14 +13,17 @@
 
 #include <chrono>
 
+//Renderer
 #include "Renderer/SimpleRendererSystem.h"
 #include "Renderer/Buffer.h"
+#include "Renderer/FrameInfo.h"
+#include "Renderer/Descriptors.h"
 
+//Engine
 #include "GameObject.h"
 #include "Camera.h"
 #include "ShortcutController.h"
-#include "Renderer/FrameInfo.h"
-
+#include "Log.h"
 
 namespace Vipera
 {
@@ -32,6 +35,12 @@ namespace Vipera
 
 	Application::Application()
 	{
+		globalPool =
+			DescriptorPool::Builder(m_Device)
+			.setMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.build();
+
 		load3dGameObjects();
 	}
 
@@ -41,18 +50,33 @@ namespace Vipera
 
 	void Application::run()
 	{
-		Buffer globalUboBuffer
+		std::vector<std::unique_ptr<Buffer>> uboBuffers(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < uboBuffers.size(); i++)
 		{
-			m_Device,
-			sizeof(GlobalUBO),
-			SwapChain::MAX_FRAMES_IN_FLIGHT,
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-			m_Device.properties.limits.minUniformBufferOffsetAlignment
-		};
-		globalUboBuffer.map();
+			uboBuffers[i] = std::make_unique<Buffer>(
+				m_Device,
+				sizeof(GlobalUBO),
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+			uboBuffers[i]->map();
+		}
 
-		SimpleRendererSystem simpleRenderSystem{ m_Device, m_Renderer.getSwapChainRenderPass() };
+		auto globalSetLayout = DescriptorSetLayout::Builder(m_Device)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.build();
+
+		std::vector<VkDescriptorSet> globalDescriptorSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < globalDescriptorSets.size(); i++)
+		{
+			auto bufferInfo = uboBuffers[i]->descriptorInfo();
+			DescriptorWriter(*globalSetLayout, *globalPool)
+			.writeBuffer(0, &bufferInfo)
+			.build(globalDescriptorSets[i]);
+		}
+
+		SimpleRendererSystem simpleRenderSystem{ m_Device, m_Renderer.getSwapChainRenderPass(),
+			globalSetLayout->getDescriptorSetLayout()};
 		Camera camera{};
 
 		auto viewerObject = GameObject::CreateGameObject();
@@ -77,12 +101,12 @@ namespace Vipera
 			if (auto commandBuffer = m_Renderer.beginFrame())
 			{
 				int frameIndex = m_Renderer.gerFrameIndex();
-				FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, camera };
+				FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex]};
 
 				GlobalUBO ubo{};
 				ubo.ProjectionView = camera.GetProjectionMatrix() * camera.GetViewMatrix();
-				globalUboBuffer.writeToIndex(&ubo, frameIndex);
-				globalUboBuffer.flushIndex(frameIndex);
+				uboBuffers[frameIndex]->writeToBuffer(&ubo);
+				uboBuffers[frameIndex]->flush();
 
 				m_Renderer.beginSwapChainRenderPass(commandBuffer);
 				simpleRenderSystem.renderGameObjects(frameInfo, m_GameObjects);
