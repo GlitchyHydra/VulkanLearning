@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-#include "FrameInfo.h"
+#include "Renderer/FrameInfo.h"
 
 namespace Vipera
 {
@@ -66,8 +66,7 @@ namespace Vipera
 			pipelineConfig);
 	}
 
-	void SimpleRendererSystem::renderGameObjects(FrameInfo& frameInfo,
-		std::vector<GameObject>& gameObjects)
+	void SimpleRendererSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
 		m_Pipeline->bind(frameInfo.CommandBuffer);
 
@@ -78,8 +77,11 @@ namespace Vipera
 			&frameInfo.globalDescriptorSet,
 			0, nullptr);
 
-		for (auto& gameObj : gameObjects)
+		for (auto& gameObjEntry : frameInfo.GameObjects)
 		{
+			auto& gameObj = gameObjEntry.second;
+			if (gameObj.model == nullptr) continue;
+
 			auto modelMatrix = gameObj.transform.mat4();
 			SimplePushConstantData push
 			{

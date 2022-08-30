@@ -28,7 +28,7 @@
     <ClInclude Include="src\Renderer\Renderer.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer\SimpleRendererSystem.h">
+    <ClInclude Include="src\Renderer\Systems\SimpleRendererSystem.h">
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\SwapChain.h">
@@ -38,6 +38,7 @@
     <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\Renderer\Descriptors.h" />
+    <ClInclude Include="src\Renderer\Systems\PointLightSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
@@ -59,7 +60,7 @@
     <ClCompile Include="src\Renderer\Renderer.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Renderer\SimpleRendererSystem.cpp">
+    <ClCompile Include="src\Renderer\Systems\SimpleRendererSystem.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Renderer\SwapChain.cpp">
@@ -69,5 +70,6 @@
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Renderer\Descriptors.cpp" />
+    <ClCompile Include="src\Renderer\Systems\PointLightSystem.cpp" />
   </ItemGroup>
 </Project>

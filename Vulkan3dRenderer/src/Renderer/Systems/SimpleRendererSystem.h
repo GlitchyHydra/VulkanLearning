@@ -23,8 +23,7 @@ namespace Vipera
 		SimpleRendererSystem(const SimpleRendererSystem&) = delete;
 		SimpleRendererSystem& operator=(const SimpleRendererSystem&) = delete;
 
-		void renderGameObjects(FrameInfo& frameInfo,
-			std::vector<GameObject>& gameObjects);
+		void renderGameObjects(FrameInfo& frameInfo);
 
 	private:
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);

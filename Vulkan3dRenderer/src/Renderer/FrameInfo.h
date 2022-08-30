@@ -1,5 +1,7 @@
 #pragma once
 
+#include "GameObject.h"
+
 namespace Vipera
 {
 	typedef struct VkCommandBuffer_T* VkCommandBuffer;
@@ -12,5 +14,6 @@ namespace Vipera
 		VkCommandBuffer CommandBuffer;
 		Camera& Camera;
 		VkDescriptorSet globalDescriptorSet;
+		GameObject::Map& GameObjects;
 	};
 }

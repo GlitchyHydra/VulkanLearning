@@ -95,6 +95,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Renderer\Systems\PointLightSystem.h" />
     <ClInclude Include="src\Renderer\Descriptors.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Camera.h" />
@@ -106,13 +107,14 @@
     <ClInclude Include="src\Renderer\Model.h" />
     <ClInclude Include="src\Renderer\Pipeline.h" />
     <ClInclude Include="src\Renderer\Renderer.h" />
-    <ClInclude Include="src\Renderer\SimpleRendererSystem.h" />
+    <ClInclude Include="src\Renderer\Systems\SimpleRendererSystem.h" />
     <ClInclude Include="src\Renderer\SwapChain.h" />
     <ClInclude Include="src\ShortcutController.h" />
     <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Renderer\Systems\PointLightSystem.cpp" />
     <ClCompile Include="src\Renderer\Descriptors.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -123,7 +125,7 @@
     <ClCompile Include="src\Renderer\Model.cpp" />
     <ClCompile Include="src\Renderer\Pipeline.cpp" />
     <ClCompile Include="src\Renderer\Renderer.cpp" />
-    <ClCompile Include="src\Renderer\SimpleRendererSystem.cpp" />
+    <ClCompile Include="src\Renderer\Systems\SimpleRendererSystem.cpp" />
     <ClCompile Include="src\Renderer\SwapChain.cpp" />
     <ClCompile Include="src\ShortcutController.cpp" />
     <ClCompile Include="src\Window.cpp" />

@@ -2,6 +2,7 @@
 
 #include "Renderer/Model.h"
 
+#include <unordered_map>
 #include <memory>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -50,6 +51,7 @@ namespace Vipera
 	{
 	public:
 		using id_t = unsigned int;
+		using Map = std::unordered_map<id_t, GameObject>;
 
 		static GameObject CreateGameObject()
 		{

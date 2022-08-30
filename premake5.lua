@@ -18,6 +18,9 @@ IncludeDir["stb_image"] = "Vulkan3dRenderer/vendor/stb_image"
 IncludeDir["tinyobjloader"] = "Vulkan3dRenderer/vendor/tinyobjloader"
 IncludeDir["spdlog"] = "Vulkan3dRenderer/vendor/spdlog/include"
 
+ShadersDir = {}
+ShadersDir["Default"] = "Vulkan3dRenderer/shaders"
+
 group "Dependecies"
     include "Vulkan3dRenderer/vendor/GLFW"
 
@@ -73,7 +76,7 @@ project "Vulkan3dRenderer"
     
     filter "system:windows"
 		systemversion "latest"
-
+        --postbuildcommands {"for %%f in (*.vert *.tesc *.tese *.geom *.frag *.comp) do glslc -V -o $(%{ShadersDir.Default})\%%f.spv %%f"}
 
     filter "configurations:Debug"
         runtime "Debug"

@@ -4,13 +4,14 @@
 #include "Renderer/Renderer.h"
 #include "Window.h"
 
+#include "GameObject.h"
+
 // std
 #include <memory>
 #include <vector>
 
 namespace Vipera
 {
-	class GameObject;
 	class DescriptorPool;
 
 	class Application
@@ -36,6 +37,6 @@ namespace Vipera
 	  Renderer m_Renderer{m_Window, m_Device};
 
 	  std::unique_ptr<DescriptorPool> globalPool{};
-	  std::vector<GameObject> m_GameObjects;
+	  GameObject::Map m_GameObjects;
 	};
 }  // namespace lve

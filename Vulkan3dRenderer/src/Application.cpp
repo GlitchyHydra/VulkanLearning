@@ -14,7 +14,8 @@
 #include <chrono>
 
 //Renderer
-#include "Renderer/SimpleRendererSystem.h"
+#include "Renderer/Systems/SimpleRendererSystem.h"
+#include "Renderer/Systems/PointLightSystem.h"
 #include "Renderer/Buffer.h"
 #include "Renderer/FrameInfo.h"
 #include "Renderer/Descriptors.h"
@@ -29,8 +30,11 @@ namespace Vipera
 {
 	struct GlobalUBO
 	{
-		glm::mat4 ProjectionView{ 1.f };
-		glm::vec3 LightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+		glm::mat4 Projection{ 1.f };
+		glm::mat4 View{ 1.f };
+		glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, .02f };  // w is intensity
+		glm::vec3 lightPosition{ -1.f };
+		alignas(16) glm::vec4 lightColor{ 1.f };  // w is light intensity
 	};
 
 	Application::Application()
@@ -61,9 +65,9 @@ namespace Vipera
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 			uboBuffers[i]->map();
 		}
-
+		
 		auto globalSetLayout = DescriptorSetLayout::Builder(m_Device)
-			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 			.build();
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -75,11 +79,23 @@ namespace Vipera
 			.build(globalDescriptorSets[i]);
 		}
 
-		SimpleRendererSystem simpleRenderSystem{ m_Device, m_Renderer.getSwapChainRenderPass(),
-			globalSetLayout->getDescriptorSetLayout()};
+		SimpleRendererSystem simpleRenderSystem
+		{
+			m_Device,
+			m_Renderer.getSwapChainRenderPass(),
+			globalSetLayout->getDescriptorSetLayout()
+		};
+		PointLightSystem pointLightSystem
+		{
+			m_Device,
+			m_Renderer.getSwapChainRenderPass(),
+			globalSetLayout->getDescriptorSetLayout()
+		};
+
 		Camera camera{};
 
 		auto viewerObject = GameObject::CreateGameObject();
+		viewerObject.transform.translation.z = -2.5f;
 		ShortcutController cameraController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
@@ -96,20 +112,25 @@ namespace Vipera
 			camera.SetViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
 			float aspect = m_Renderer.GetAspectRatio();
-			camera.SetPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+			camera.SetPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
 
 			if (auto commandBuffer = m_Renderer.beginFrame())
 			{
 				int frameIndex = m_Renderer.gerFrameIndex();
-				FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex]};
+				FrameInfo frameInfo{ frameIndex, frameTime,
+					commandBuffer, camera,
+					globalDescriptorSets[frameIndex],
+				m_GameObjects};
 
 				GlobalUBO ubo{};
-				ubo.ProjectionView = camera.GetProjectionMatrix() * camera.GetViewMatrix();
+				ubo.Projection = camera.GetProjectionMatrix();
+				ubo.View = camera.GetViewMatrix();
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
 
 				m_Renderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(frameInfo, m_GameObjects);
+				simpleRenderSystem.renderGameObjects(frameInfo);
+				pointLightSystem.render(frameInfo);
 				m_Renderer.endSwapChainRenderPass(commandBuffer);
 				m_Renderer.endFrame();
 			}
@@ -192,26 +213,27 @@ namespace Vipera
 
 	void Application::load3dGameObjects()
 	{
-		//std::shared_ptr<Model> model = createCubeModel(m_Device, {0.f, 0.f, 0.f});
-		//std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "models/colored_cube.obj");
 		std::shared_ptr<Model> modelFlat = Model::CreateModelFromFile(m_Device, "models/flat_vase.obj");
-
 		auto flatVase = GameObject::CreateGameObject();
 		flatVase.model = modelFlat;
-		flatVase.transform.translation = { -.5f, .5f, 2.5f };
+		flatVase.transform.translation = { -.5f, .5f, 0.f };
 		flatVase.transform.scale = { 3.f, 1.5f, 3.f };
 		//cube.transform.rotation = { 0.f, 0.f, 0.f };
-		m_GameObjects.push_back(std::move(flatVase));
+		m_GameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
 		std::shared_ptr<Model> modelSmooth = Model::CreateModelFromFile(m_Device, "models/smooth_vase.obj");
 		auto smoothVase = GameObject::CreateGameObject();
 		smoothVase.model = modelSmooth;
-		smoothVase.transform.translation = { .5f, .5f, 2.5f };
+		smoothVase.transform.translation = { .5f, .5f, 0.f };
 		smoothVase.transform.scale = { 3.f, 1.5f, 3.f };
-		//cube.transform.rotation = { 0.f, 0.f, 0.f };
-		m_GameObjects.push_back(std::move(smoothVase));
-	}
+		m_GameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
-	
+		std::shared_ptr<Model> modelPlane = Model::CreateModelFromFile(m_Device, "models/quad.obj");
+		auto plane = GameObject::CreateGameObject();
+		plane.model = modelPlane;
+		plane.transform.translation = { .0f, .5f, 0.f };
+		plane.transform.scale = { 3.f, 1.5f, 3.f };
+		m_GameObjects.emplace(plane.getId(), std::move(plane));
+	}
 	
 } // namespace 
