@@ -1,4 +1,5 @@
 require "os"
+require "clion"
 local os = package.loaded['os']
 
 workspace "Vulkan3dRenderer"

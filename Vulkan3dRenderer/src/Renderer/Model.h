@@ -14,6 +14,8 @@
 
 namespace Vipera
 {
+	class DescriptorPool;
+	class DescriptorSetLayout;
 	class Buffer;
 
 	class Model
@@ -51,13 +53,21 @@ namespace Vipera
 		Model& operator=(const Model&) = delete;
 
 		static std::unique_ptr<Model> CreateModelFromFile(Device& device, const std::string& filepath);
+		void CreateTextureFromFile(const std::string& filepath);
 
+		void createDescriptorSets(int framesCount, std::unique_ptr<DescriptorPool>& descPool, std::unique_ptr<DescriptorSetLayout>& descLayout);
+		VkDescriptorSet getDescriptorSet(int i) const { return m_DescriptorSet.front(); }
+		VkImageView getImageView() const {	return m_TextureImageView; }
+		VkSampler getSampler() const {	return m_TextureSampler; }
 		void bind(VkCommandBuffer commandBuffer);
 		void draw(VkCommandBuffer commandBuffer);
 
 	private:
 		void createVertexBuffers(const std::vector<Vertex>& vertices);
 		void createIndexBuffers(const std::vector<uint32_t>& indices);
+		void createTexture(const std::string& filepath);
+		void createTextureImageView();
+		void createTextureSampler();
 
 		Device& m_Device;
 
@@ -67,5 +77,12 @@ namespace Vipera
 		bool hasIndexBuffer = false;
 		std::unique_ptr<Buffer> indexBuffer;
 		uint32_t indexCount;
+
+		//Todo transfer to separate abstraction class
+		bool hasTexture = false;
+		VkImage m_TextureImage;
+		VkImageView m_TextureImageView;
+		VkSampler m_TextureSampler;
+		std::vector<VkDescriptorSet> m_DescriptorSet; //TODO make std::vector of descriptors for different textures
 	};
 }  // namespace 

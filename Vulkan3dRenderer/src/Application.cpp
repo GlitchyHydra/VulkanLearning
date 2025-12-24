@@ -39,11 +39,9 @@ namespace Vipera
 
 	Application::Application()
 	{
-		globalPool =
-			DescriptorPool::Builder(m_Device)
-			.setMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT)
-			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
-			.build();
+		//set max sets 2 (uniform buffer + sampler) * per frame count
+		int poolSizeCombinedSampler = 4; //TODO make relative to number of textures???
+
 
 		load3dGameObjects();
 	}
@@ -54,6 +52,14 @@ namespace Vipera
 
 	void Application::run()
 	{
+		size_t objsWithSamplerNum = m_GameObjects.size(); //TODO make adaptive
+		globalPool =
+			DescriptorPool::Builder(m_Device)
+			.setMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT * 2 * objsWithSamplerNum) //TODO make adaptive for sampler pool size
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100*SwapChain::MAX_FRAMES_IN_FLIGHT)
+			.build();
+
 		std::vector<std::unique_ptr<Buffer>> uboBuffers(SwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (int i = 0; i < uboBuffers.size(); i++)
 		{
@@ -65,25 +71,40 @@ namespace Vipera
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 			uboBuffers[i]->map();
 		}
-		
+
+		uint32_t imageCount = m_GameObjects.size(); //TODO find number of unique textures
+
+		//split to two sets as projection-vire uniform buffer we need to update less than samplers
+		//set 0
 		auto globalSetLayout = DescriptorSetLayout::Builder(m_Device)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 			.build();
+
+		//set 1
+		auto textureSetLayout = DescriptorSetLayout::Builder(m_Device)
+		.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)
+		.build();
+
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (int i = 0; i < globalDescriptorSets.size(); i++)
 		{
 			auto bufferInfo = uboBuffers[i]->descriptorInfo();
-			DescriptorWriter(*globalSetLayout, *globalPool)
-			.writeBuffer(0, &bufferInfo)
+			DescriptorWriter descriptorWriter(*globalSetLayout, *globalPool);
+			descriptorWriter.writeBuffer(0, &bufferInfo)
 			.build(globalDescriptorSets[i]);
+		}
+
+		for (auto& idToGameObject : m_GameObjects) {
+			idToGameObject.second.model->createDescriptorSets(1, globalPool, textureSetLayout);
 		}
 
 		SimpleRendererSystem simpleRenderSystem
 		{
 			m_Device,
 			m_Renderer.getSwapChainRenderPass(),
-			globalSetLayout->getDescriptorSetLayout()
+			globalSetLayout->getDescriptorSetLayout(),
+			textureSetLayout->getDescriptorSetLayout()
 		};
 		PointLightSystem pointLightSystem
 		{
@@ -117,14 +138,20 @@ namespace Vipera
 			if (auto commandBuffer = m_Renderer.beginFrame())
 			{
 				int frameIndex = m_Renderer.gerFrameIndex();
-				FrameInfo frameInfo{ frameIndex, frameTime,
+				FrameInfo frameInfo
+				{
+					frameIndex, frameTime,
 					commandBuffer, camera,
 					globalDescriptorSets[frameIndex],
-				m_GameObjects};
+					m_GameObjects
+				};
 
 				GlobalUBO ubo{};
 				ubo.Projection = camera.GetProjectionMatrix();
 				ubo.View = camera.GetViewMatrix();
+				ubo.lightColor = glm::vec4{ 1.0f, 1.0f, 1.0f, 0.5f };
+				ubo.lightPosition = glm::vec4{ -2.0f, -1.0f, 1.0f, 1.0f };
+				ubo.ambientLightColor = glm::vec4{ 0.2f, 0.2f, 0.2f, 1.0f };
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
 
@@ -159,46 +186,14 @@ namespace Vipera
 		m_GameObjects.push_back(std::move(triangle));*/
 	}
 
-	// temporary helper function, creates a 1x1x1 cube centered at offset
-	std::unique_ptr<Model> createCubeModel(Device& device, glm::vec3 offset)
-	{
+	std::shared_ptr<Model> createPlane(Device& device, glm::vec3 offset) {
 		Model::Builder modelBuilder{};
 		modelBuilder.vertices = {
-			// left face (white)
-			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-			{{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-			{{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-			{{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-
-			// right face (yellow)
-			{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-			{{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-			{{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-			{{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-
-			// top face (orange, remember y axis points down)
-			{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-			{{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-			{{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-			{{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-
 			// bottom face (red)
 			{{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
 			{{.5f, .5f, .5f}, {.8f, .1f, .1f}},
 			{{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
 			{{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-
-			// nose face (blue)
-			{{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-			{{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-			{{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-			{{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-
-			// tail face (green)
-			{{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-			{{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-			{{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-			{{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
 		};
 		for (auto& v : modelBuilder.vertices)
 		{
@@ -208,31 +203,97 @@ namespace Vipera
 		modelBuilder.indices = { 0,  1,  2,  0,  3,  1,  4,  5,  6,  4,  7,  5,  8,  9,  10, 8,  11, 9,
 								12, 13, 14, 12, 15, 13, 16, 17, 18, 16, 19, 17, 20, 21, 22, 20, 23, 21 };
 
-		return std::make_unique<Model>(device, modelBuilder);
+		return std::make_shared<Model>(device, modelBuilder);
+	}
+
+	// temporary helper function, creates a 1x1x1 cube centered at offset
+	std::shared_ptr<Model> createCubeModel(Device& device, glm::vec3 offset)
+	{
+		Model::Builder modelBuilder{};
+		modelBuilder.vertices = {
+			// left face (white)
+			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f},{}, {0.0f, 0.0f}},
+			{{-.5f, .5f, .5f}, {.9f, .9f, .9f},  {}, {0.0f, 1.0f}},
+			{{-.5f, -.5f, .5f}, {.9f, .9f, .9f}, {}, {1.0f, 0.0f}},
+			{{-.5f, .5f, -.5f}, {.9f, .9f, .9f}, {}, {1.0f, 1.0f}},
+
+			// right face (yellow)
+			{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}, {}, {0.0f, 1.0f}},
+			{{.5f, .5f, .5f}, {.8f, .8f, .1f}, {}, {0.0f, 0.0f}},
+			{{.5f, -.5f, .5f}, {.8f, .8f, .1f}, {}, {1.0f, 0.0f}},
+			{{.5f, .5f, -.5f}, {.8f, .8f, .1f}, {}, {1.0f, 1.0f}},
+
+			// top face (orange, remember y axis points down)
+			{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}, {}, {1.0f, 0.0f}},
+			{{.5f, -.5f, .5f}, {.9f, .6f, .1f}, {}, {0.0f, 0.0f}},
+			{{-.5f, -.5f, .5f}, {.9f, .6f, .1f}, {}, {0.0f, 1.0f}},
+			{{.5f, -.5f, -.5f}, {.9f, .6f, .1f}, {}, {1.0f, 1.0f}},
+
+			// bottom face (red)
+			{{-.5f, .5f, -.5f}, {.8f, .1f, .1f}, {}, {1.0f, 0.0f}},
+			{{.5f, .5f, .5f}, {.8f, .1f, .1f}, {}, {0.0f, 0.0f}},
+			{{-.5f, .5f, .5f}, {.8f, .1f, .1f}, {}, {0.0f, 1.0f}},
+			{{.5f, .5f, -.5f}, {.8f, .1f, .1f}, {}, {1.0f, 1.0f}},
+
+			// nose face (blue)
+			{{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}, {}, {0.0f, 1.0f}},
+			{{.5f, .5f, 0.5f}, {.1f, .1f, .8f}, {}, {0.0f, 0.0f}},
+			{{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}, {}, {1.0f, 0.0f}},
+			{{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}, {}, {1.0f, 1.0f} },
+
+			// tail face (green)
+			{{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}, {}, {0.0f, 1.0f}},
+			{{.5f, .5f, -0.5f}, {.1f, .8f, .1f}, {}, {0.0f, 0.0f}},
+			{{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}, {}, {1.0f, 0.0f}},
+			{{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}, {}, {1.0f, 1.0f}},
+		};
+		for (auto& v : modelBuilder.vertices)
+		{
+			v.position += offset;
+		}
+
+		modelBuilder.indices = { 0,  1,  2,  0,  3,  1,  4,  5,  6,  4,  7,  5,  8,  9,  10, 8,  11, 9,
+								12, 13, 14, 12, 15, 13, 16, 17, 18, 16, 19, 17, 20, 21, 22, 20, 23, 21 };
+
+		return std::make_shared<Model>(device, modelBuilder);
 	}
 
 	void Application::load3dGameObjects()
 	{
-		std::shared_ptr<Model> modelFlat = Model::CreateModelFromFile(m_Device, "models/flat_vase.obj");
-		auto flatVase = GameObject::CreateGameObject();
-		flatVase.model = modelFlat;
-		flatVase.transform.translation = { -.5f, .5f, 0.f };
-		flatVase.transform.scale = { 3.f, 1.5f, 3.f };
-		//cube.transform.rotation = { 0.f, 0.f, 0.f };
-		m_GameObjects.emplace(flatVase.getId(), std::move(flatVase));
+		std::shared_ptr<Model> cubeModel = createCubeModel(m_Device, glm::vec3(0.0f));
+		auto cube = GameObject::CreateGameObject();
+		cube.model = cubeModel;
+		cubeModel->CreateTextureFromFile("models/texture.jpg");
+		m_GameObjects.emplace(cube.getId(), std::move(cube));
 
-		std::shared_ptr<Model> modelSmooth = Model::CreateModelFromFile(m_Device, "models/smooth_vase.obj");
-		auto smoothVase = GameObject::CreateGameObject();
-		smoothVase.model = modelSmooth;
-		smoothVase.transform.translation = { .5f, .5f, 0.f };
-		smoothVase.transform.scale = { 3.f, 1.5f, 3.f };
-		m_GameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
+		try {
+			std::shared_ptr<Model> modelFlat = Model::CreateModelFromFile(m_Device, "models/chinese-vase/55246_LowPoly.obj");
+			auto flatVase = GameObject::CreateGameObject();
+			flatVase.model = modelFlat;
+			flatVase.transform.translation = { -.5f, .5f, 0.f };
+			flatVase.transform.scale = { 0.01f, 0.01f, 0.01f };
+			flatVase.transform.rotation = { M_PI / 2.0f, 0.f, 0.f};
+			modelFlat->CreateTextureFromFile("models/chinese-vase/55246_LowPoly_1.jpg");
+			//cube.transform.rotation = { 0.f, 0.f, 0.f };
+			m_GameObjects.emplace(flatVase.getId(), std::move(flatVase));
+		} catch (const std::exception& e) {
+			spdlog::error("Failed to load 3D GameObject from file {}", e.what());
+		}
 
-		std::shared_ptr<Model> modelPlane = Model::CreateModelFromFile(m_Device, "models/quad.obj");
+
+		// std::shared_ptr<Model> modelSmooth = Model::CreateModelFromFile(m_Device, "models/smooth_vase.obj");
+		// auto smoothVase = GameObject::CreateGameObject();
+		// smoothVase.model = modelSmooth;
+		// smoothVase.transform.translation = { .5f, .5f, 0.f };
+		// smoothVase.transform.scale = { 3.f, 1.5f, 3.f };
+		// m_GameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
+		//
+		std::shared_ptr<Model> modelPlane = createPlane(m_Device, {0.f, 0.f, 0.f});
 		auto plane = GameObject::CreateGameObject();
 		plane.model = modelPlane;
-		plane.transform.translation = { .0f, .5f, 0.f };
-		plane.transform.scale = { 3.f, 1.5f, 3.f };
+		plane.transform.translation = { .0f, 3.5f, .5f };
+		plane.transform.scale = { 10.f, 1.5f, 10.f };
+		modelPlane->CreateTextureFromFile("models/texture.jpg");
 		m_GameObjects.emplace(plane.getId(), std::move(plane));
 	}
 	

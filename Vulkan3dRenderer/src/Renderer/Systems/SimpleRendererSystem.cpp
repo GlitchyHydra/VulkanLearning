@@ -9,6 +9,9 @@
 
 #include "Renderer/FrameInfo.h"
 
+#include <iostream>
+#include <filesystem>
+
 namespace Vipera
 {
 	struct SimplePushConstantData
@@ -17,10 +20,11 @@ namespace Vipera
 		glm::mat4 normalMatrix {1.f};
 	};
 
-	SimpleRendererSystem::SimpleRendererSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
+	SimpleRendererSystem::SimpleRendererSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout,
+		VkDescriptorSetLayout samplerSetLayout)
 		:m_Device{device}
 	{
-		createPipelineLayout(globalSetLayout);
+		createPipelineLayout(globalSetLayout, samplerSetLayout);
 		createPipeline(renderPass);
 	}
 
@@ -29,14 +33,14 @@ namespace Vipera
 		vkDestroyPipelineLayout(m_Device.device(), pipelineLayout, nullptr);
 	}
 	
-	void SimpleRendererSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
+	void SimpleRendererSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout samplerSetLayout)
 	{
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = sizeof(SimplePushConstantData);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts {globalSetLayout};
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts { globalSetLayout, samplerSetLayout };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -59,6 +63,7 @@ namespace Vipera
 		Pipeline::defaultPipelineConfigInfo(pipelineConfig);
 		pipelineConfig.renderPass = renderPass;
 		pipelineConfig.pipelineLayout = pipelineLayout;
+		std::cout << "Current path is: " << std::filesystem::current_path() << std::endl;
 		m_Pipeline = std::make_unique<Pipeline>(
 			m_Device,
 			"shaders/simple_shader.vert.spv",
@@ -69,20 +74,20 @@ namespace Vipera
 	void SimpleRendererSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
 		m_Pipeline->bind(frameInfo.CommandBuffer);
+		//std::vector<VkDescriptorSet> descriptorSets {frameInfo.globalDescriptorSet};
 
-		vkCmdBindDescriptorSets(frameInfo.CommandBuffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			pipelineLayout,
-			0, 1,
-			&frameInfo.globalDescriptorSet,
-			0, nullptr);
+		// vkCmdBindDescriptorSets(frameInfo.CommandBuffer,
+		// 	VK_PIPELINE_BIND_POINT_GRAPHICS,
+		// 	pipelineLayout,
+		// 	0, 1,
+		// 	&frameInfo.globalDescriptorSet,
+		// 	0, nullptr);
 
 		for (auto& gameObjEntry : frameInfo.GameObjects)
 		{
 			auto& gameObj = gameObjEntry.second;
 			if (gameObj.model == nullptr) continue;
 
-			auto modelMatrix = gameObj.transform.mat4();
 			SimplePushConstantData push
 			{
 				  gameObj.transform.mat4(),
@@ -95,6 +100,16 @@ namespace Vipera
 				0,
 				sizeof(SimplePushConstantData),
 				&push);
+
+			VkDescriptorSet descSet = gameObj.model->getDescriptorSet(frameInfo.FrameIndex);
+			std::vector<VkDescriptorSet> descriptorSets {frameInfo.globalDescriptorSet, descSet};
+			vkCmdBindDescriptorSets(frameInfo.CommandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			pipelineLayout,
+			0, descriptorSets.size(),
+			descriptorSets.data(),
+			0, nullptr);
+
 			gameObj.model->bind(frameInfo.CommandBuffer);
 			gameObj.model->draw(frameInfo.CommandBuffer);
 		}

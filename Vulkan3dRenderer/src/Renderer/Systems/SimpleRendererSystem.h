@@ -17,7 +17,7 @@ namespace Vipera
 	class SimpleRendererSystem
 	{
 	public:
-		SimpleRendererSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+		SimpleRendererSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout samplerSetLayout);
 		~SimpleRendererSystem();
 
 		SimpleRendererSystem(const SimpleRendererSystem&) = delete;
@@ -26,7 +26,7 @@ namespace Vipera
 		void renderGameObjects(FrameInfo& frameInfo);
 
 	private:
-		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
+		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout samplerSetLayout);
 		void createPipeline(VkRenderPass renderPass);
 		
 		
