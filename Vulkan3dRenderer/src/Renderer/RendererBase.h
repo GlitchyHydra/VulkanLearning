@@ -6,11 +6,11 @@
 #define VULKAN3DRENDERER_RENDERERBASE_H
 
 
-
 class RendererBase {
-
+    explicit RendererBase(const Device& device);
+    virtual ~RendererBase();
+    virtual void fillCommandBuffer();
 };
-
 
 
 #endif //VULKAN3DRENDERER_RENDERERBASE_H
